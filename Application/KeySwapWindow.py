@@ -2,13 +2,18 @@ import socket
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
     QTextEdit, QGridLayout, QApplication, QPushButton)
 
+from Application.Requests import server_services
+
 
 class KeySwapWindow(QWidget):
+    __partner_addr = None
+    __partner_port = None
 
     def __init__(self, server_ip, sock, username):
         super(KeySwapWindow, self).__init__()
         # запускаем метод рисующий виджеты окна
-
+        self.__sock = sock
+        self.__username = username
         self.initUI(server_ip, sock, username)
 
     def initUI(self, server_ip, sock: socket, username):
@@ -18,9 +23,10 @@ class KeySwapWindow(QWidget):
         partner_connection = QLabel('Connection status:')
         partner_name = QLabel("Your partner's name")
 
-        partner_name_edit = QTextEdit()
-        partner_connection_status_lbl = QLabel('Not connected')
-        refresh_partner_connection_status_btn = QPushButton('refresh', self)
+        self.partner_name_edit = QLineEdit()
+        self.partner_connection_status_lbl = QLabel('Not connected')
+        connect_partner_btn = QPushButton('connect', self)
+        connect_partner_btn.clicked.connect(self.ConnectPartnerBtnClicked)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -30,11 +36,11 @@ class KeySwapWindow(QWidget):
         grid.addWidget(my_name_lbl, 1, 0, 1, 3)
 
         grid.addWidget(partner_name, 2, 0)
-        grid.addWidget(partner_name_edit, 2, 1, 1, 2)
+        grid.addWidget(self.partner_name_edit, 2, 1, 1, 2)
 
         grid.addWidget(partner_connection, 3, 0)
-        grid.addWidget(partner_connection_status_lbl, 3, 1)
-        grid.addWidget(refresh_partner_connection_status_btn, 3, 2)
+        grid.addWidget(self.partner_connection_status_lbl, 3, 1)
+        grid.addWidget(connect_partner_btn, 3, 2)
 
         self.setLayout(grid)
 
@@ -42,7 +48,21 @@ class KeySwapWindow(QWidget):
         self.setWindowTitle('Diffie-Hellman key swap')
         self.show()
 
+    def ConnectPartnerBtnClicked(self):
+        self.__sock.send(server_services['DiffieHellman'])
+        resp = self.__sock.recv(1024)
+        if resp == server_services['DiffieHellman']:
+            self.__sock.send(
+                bytes(self.partner_name_edit.text(), 'utf-8'))
+            resp = self.__sock.recv(1024)
+            if resp == b'Not connected':
+                self.partner_connection_status_lbl.setText('Not connected')
+                return 0
+            self.partner_connection_status_lbl.setText('Connected')
+            resp = self.__sock.recv(1024).decode(encoding='utf-8')
+            self.__partner_addr, self.__partner_port = resp.split(' ')
 
-def ClientConnectionsListener(sock: socket):
-    conn, addr = sock.accept()
+
+
+
 

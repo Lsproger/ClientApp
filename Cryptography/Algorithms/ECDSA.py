@@ -1,5 +1,5 @@
-from Algorithms.Functions import *
-from base.Operations import *
+from Cryptography.Algorithms.Functions import *
+from Cryptography.base.Operations import *
 
 
 def get_signature(z, private_key, curve: Curve=curve_P256):

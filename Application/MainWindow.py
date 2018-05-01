@@ -19,7 +19,7 @@ class MainWindow(QWidget):
     # ---конец описания свойства
 
     __lastusername = ''
-    __port = 9090
+    __port = 9876
     __username = ''
     __filename = 'Application/Keys/{name}.txt'
     __public_key = Point(0, 0)

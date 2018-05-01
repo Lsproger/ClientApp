@@ -1,5 +1,5 @@
 from User import *
-from base.Point import Point
+from Cryptography.base.Point import Point
 from pbkdf2 import PBKDF2
 from Crypto.Cipher import AES
 from random import choice
