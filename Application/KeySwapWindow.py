@@ -1,10 +1,10 @@
 import socket
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
-    QTextEdit, QGridLayout, QApplication, QPushButton)
-import time
+                             QGridLayout, QPushButton, QMessageBox)
 
-from Application.Cryptography.Algorithms import Point
-from Application.Requests import server_services
+from Application.Cryptography.Point import Point
+from Application.Requests import server_services, GetPublicKey
+from Application.Cryptography.Functions import get_secret
 
 
 class KeySwapWindow(QWidget):
@@ -12,12 +12,18 @@ class KeySwapWindow(QWidget):
     __partner_status = 'offline'
     __partner_addr = 'None'
     __partner_port = 'None'
+    __partner_name = 'None'
+    __partner_public = None
+    __private = None
+    __public = None
 
     def __init__(self, server_ip, sock, username, public: Point, private):
         super(KeySwapWindow, self).__init__()
         # запускаем метод рисующий виджеты окна
         self.__sock = sock
         self.__username = username
+        self.__private = private
+        self.__public = public
         self.initUI(server_ip, sock, username)
 
     def initUI(self, server_ip, sock: socket, username):
@@ -40,6 +46,8 @@ class KeySwapWindow(QWidget):
 
         connect_partner_btn.clicked.connect(self.ConnectPartnerBtnClicked)
         self.start_swap_btn.clicked.connect(self.StartSwapBtnClicked)
+
+        shared_key_lbl = QLabel('Your shared key: ')
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -75,8 +83,9 @@ class KeySwapWindow(QWidget):
         self.__sock.send(server_services['DiffieHellman'])
         resp = self.__sock.recv(1024)
         if resp == server_services['DiffieHellman']:
+            self.__partner_name = self.partner_name_edit.text()
             self.__sock.send(
-                bytes(self.partner_name_edit.text(), 'utf-8'))
+                bytes(self.__partner_name, 'utf-8'))
             resp = self.__sock.recv(1024)
             if resp == b'Fail':
                 self.partner_connection_status_lbl.setText('Not connected')
@@ -86,14 +95,26 @@ class KeySwapWindow(QWidget):
             self.UpdateLables(True)
 
     def StartSwapBtnClicked(self):
-        self.__sock.send(b'SWAP')
-        resp = self.__sock.recv(1024)
-        if resp == b'OK':
-            pass
+        sock = socket.socket()
+        sock.connect((str(self.__partner_addr), int(self.__partner_port)))
+        sock.send(bytes(self.__username, 'utf-8'))
+        sock.send(b'SWAP')
+        resp = sock.recv(1024)
+        if resp == b'SWAP':
+            partner_public = GetPublicKey(self.__partner_name, self.__sock)
+            self.__partner_public = Point(partner_public[0], partner_public[1])
+            secret = get_secret(self.__private, self.__partner_public)
+            self.ShowDialog(secret)
 
+    def ShowDialog(self, shared_key):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
 
-
-
+        msg.setText(str(shared_key.x))
+        msg.setInformativeText("This is your shared key. Save this info!")
+        msg.setWindowTitle("Shared key")
+        msg.setDetailedText("It will disappear if you close!")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
     def UpdateLables(self, isConnected):
         if isConnected:

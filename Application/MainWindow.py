@@ -1,10 +1,12 @@
 import socket
+import threading
+
 from Application.Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
-                             QTextEdit, QGridLayout, QPushButton)
-from Cryptography.Functions import generate_keys
+                             QTextEdit, QGridLayout, QPushButton, QMessageBox)
+from Application.Cryptography.Functions import generate_keys, get_secret
 from Application.KeySwapWindow import KeySwapWindow
-from Cryptography.Point import Point
+from Application.Cryptography.Point import Point
 
 
 class MainWindow(QWidget):
@@ -26,7 +28,7 @@ class MainWindow(QWidget):
     __private_key = 0
     __server_ip = '127.0.0.1'
     __connect_status = 'Not connected'
-    __csocket = None
+    __ssocket = None
     __listener_sock = None
     __listener_port = 0
 
@@ -115,13 +117,13 @@ class MainWindow(QWidget):
         f.close()
 
     def LoadPublicKey(self):
-        x, y = GetPublicKey(self.__username, self.__csocket)
+        x, y = GetPublicKey(self.__username, self.__ssocket)
         self.__public_key = Point(x, y)
 
     def ConnectServerBtnClicked(self):
-        if self.__csocket is not None:
-            Disconnect(self.__lastusername, self.__csocket)
-            self.__csocket = None
+        if self.__ssocket is not None:
+            Disconnect(self.__lastusername, self.__ssocket)
+            self.__ssocket = None
 
         self.__username = self.username.text()
         self.__lastusername = self.__username
@@ -130,15 +132,15 @@ class MainWindow(QWidget):
             return 0
 
         self.__server_ip = self.server_ip_edit.text()
-        self.__csocket = ConnectToServer(self.__username, self.__server_ip, self.__port)
+        self.__ssocket = ConnectToServer(self.__username, self.__server_ip, self.__port)
 
-        if self.__csocket is not None:
+        if self.__ssocket is not None:
             self.__connect_status = 'Connected'
             self.LoadKeys()
 
-            self.__listener_sock, self.__listener_port = CreateListenerSocket()
-            CreateListener(self.__listener_sock)
-            RegisterListener(self.__csocket, self.__listener_port)
+            self.__listener_sock, self.__listener_port = self.CreateListener()
+            RegisterListener(self.__ssocket, self.__listener_port)
+            self.StartListen(self.__listener_sock)
         else:
             self.__connect_status = 'Not connected! Address error!'
 
@@ -160,11 +162,11 @@ class MainWindow(QWidget):
 
     def GenKeysBtnClicked(self):
         try:
-            sock = self.__csocket
+            sock = self.__ssocket
             if sock is not None:
                 self.__private_key, self.__public_key = generate_keys()
                 key = str(self.__public_key.x) + ' ' + str(self.__public_key.y)
-                isSaved = self.SaveKeys(str(self.__private_key), key, self.__csocket)
+                isSaved = self.SaveKeys(str(self.__private_key), key, self.__ssocket)
 
             self.UpdateLables()
         except Exception as e:
@@ -173,25 +175,54 @@ class MainWindow(QWidget):
     def KeySwapBtnClicked(self):
         if self.__connect_status == 'Not connected':
             return 0
-        self.addwin = KeySwapWindow(self.__server_ip, self.__csocket, self.__username)
+        self.addwin = KeySwapWindow(
+            self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
     def UpdateLables(self):
         self.private_key.setText(str(self.__private_key))
         self.public_key.setText('x: %d <br> y: %d' % (self.__public_key.x, self.__public_key.y))
         self.connection_status_lbl.setText(self.__connect_status)
 
+    def StartListen(self, sock: socket):
+        listener = threading.Thread(target=self.Listen, args=(sock, None))
+        listener.setDaemon(True)
+        listener.start()
 
-def CreateListenerSocket():
-    sock = socket.socket()
-    port = 50000
-    while 1:
-        try:
-            sock.bind(('', port))
-            break
-        except OSError:
-            port = port + 1
-    return sock, port
+    def Listen(self, sock: socket, param):
+        while 1:
+            conn, addr = sock.accept()
+            client_name = conn.recv(1024)
+            service = conn.recv(1024)
+            if service == b'SWAP':
+                conn.send(b'SWAP')
+                partner_public_mas = GetPublicKey(client_name, self.__ssocket)
+                partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+                secret = get_secret(self.__private_key, partner_public)
+                self.ShowDialog(secret)
+            conn.close()
+
+    def ShowDialog(self, shared_key):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+
+        msg.setText(str(shared_key.x))
+        msg.setInformativeText("This is your shared key. Save this info!")
+        msg.setWindowTitle("Shared key")
+        msg.setDetailedText("It will disappear if you close!")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
 
-def CreateListener(sock: socket):
-    sock.listen(1)
+    def CreateListener(self):
+        sock = socket.socket()
+        port = 50000
+        while 1:
+            try:
+                sock.bind(('', port))
+                sock.listen(1)
+                break
+            except OSError:
+                port = port + 1
+        return sock, port
+
+
+

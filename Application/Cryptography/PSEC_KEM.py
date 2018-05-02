@@ -1,10 +1,10 @@
 from User import *
 
-from Cryptography import Curve
-from Cryptography.Curve import curve_P256
-from Cryptography.Functions import get_random_k, get_public_key
-from Cryptography.Operations import multiply
-from Cryptography.Point import Point
+from Application.Cryptography import Curve
+from Application.Cryptography.Curve import curve_P256
+from Application.Cryptography.Functions import get_random_k, get_public_key
+from Application.Cryptography.Operations import multiply
+from Application.Cryptography.Point import Point
 from pbkdf2 import PBKDF2
 from Crypto.Cipher import AES
 from random import choice
