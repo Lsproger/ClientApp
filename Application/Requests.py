@@ -34,7 +34,7 @@ def Disconnect(username, csocket: socket):
     csocket.close()
 
 
-def GetPublicKey(username, csocket: socket):
+def GetPublicKey(username: str, csocket: socket):
     try:
         csocket.send(server_services['GetPublicKey'])
         resp = csocket.recv(1024)

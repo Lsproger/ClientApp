@@ -192,13 +192,20 @@ class MainWindow(QWidget):
         while 1:
             conn, addr = sock.accept()
             client_name = conn.recv(1024)
-            service = conn.recv(1024)
-            if service == b'SWAP':
+            print('Client on swap', client_name)
+            # service = conn.recv(1024)
+            print('Service')
+            # if service == b'SWAP':
+            if 1 == 1:
                 conn.send(b'SWAP')
-                partner_public_mas = GetPublicKey(client_name, self.__ssocket)
+                print('send SWAP')
+                partner_public_mas = GetPublicKey(str(client_name), self.__ssocket)
+                print('Get public key')
                 partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-                secret = get_secret(self.__private_key, partner_public)
+                secret = get_secret(int(self.__private_key), partner_public)
                 self.ShowDialog(secret)
+            else:
+                conn.send(b'NO')
             conn.close()
 
     def ShowDialog(self, shared_key):
@@ -209,8 +216,8 @@ class MainWindow(QWidget):
         msg.setInformativeText("This is your shared key. Save this info!")
         msg.setWindowTitle("Shared key")
         msg.setDetailedText("It will disappear if you close!")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
 
     def CreateListener(self):
         sock = socket.socket()

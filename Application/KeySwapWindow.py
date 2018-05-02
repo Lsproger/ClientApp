@@ -95,16 +95,24 @@ class KeySwapWindow(QWidget):
             self.UpdateLables(True)
 
     def StartSwapBtnClicked(self):
-        sock = socket.socket()
-        sock.connect((str(self.__partner_addr), int(self.__partner_port)))
-        sock.send(bytes(self.__username, 'utf-8'))
-        sock.send(b'SWAP')
-        resp = sock.recv(1024)
-        if resp == b'SWAP':
-            partner_public = GetPublicKey(self.__partner_name, self.__sock)
-            self.__partner_public = Point(partner_public[0], partner_public[1])
-            secret = get_secret(self.__private, self.__partner_public)
-            self.ShowDialog(secret)
+        try:
+            sock = socket.socket()
+            sock.connect((str(self.__partner_addr), int(self.__partner_port)))
+            print('connected to partner', sock)
+            sock.send(bytes(self.__username, 'utf-8'))
+            # sock.send(b'SWAP')
+            print('sended name & swap')
+            resp = sock.recv(1024)
+            if resp == b'SWAP':
+                partner_public = GetPublicKey(self.__partner_name, self.__sock)
+                self.__partner_public = Point(partner_public[0], partner_public[1])
+                secret = get_secret(int(self.__private), self.__partner_public)
+                print(secret)
+                self.ShowDialog(secret)
+        except ConnectionRefusedError:
+            print('Connection refused')
+
+
 
     def ShowDialog(self, shared_key):
         msg = QMessageBox()
@@ -115,6 +123,7 @@ class KeySwapWindow(QWidget):
         msg.setWindowTitle("Shared key")
         msg.setDetailedText("It will disappear if you close!")
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.exec_()
 
     def UpdateLables(self, isConnected):
         if isConnected:
