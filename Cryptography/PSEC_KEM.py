@@ -1,5 +1,10 @@
 from User import *
-from Cryptography.base.Point import Point
+
+from Cryptography import Curve
+from Cryptography.Curve import curve_P256
+from Cryptography.Functions import get_random_k, get_public_key
+from Cryptography.Operations import multiply
+from Cryptography.Point import Point
 from pbkdf2 import PBKDF2
 from Crypto.Cipher import AES
 from random import choice
@@ -7,14 +12,14 @@ from string import ascii_letters
 
 
 # Key generation
-def generate_keys(curve: Curve=curve_P256):
+def generate_keys(curve: Curve =curve_P256):
     private = get_random_k(curve)
     public = get_public_key(private, curve)
     return private, public
 
 
 # Encryption
-def encrypt(public_key: Point, msg, curve: Curve=curve_P256):
+def encrypt(public_key: Point, msg, curve: Curve =curve_P256):
     l = 128
     r = int(bin(get_random_k())[2:l+2], 2)
     keylen = 256
@@ -37,7 +42,7 @@ def encrypt(public_key: Point, msg, curve: Curve=curve_P256):
 
 
 # Decryption
-def decrypt(private_key, s, T: Point, c_text, curve: Curve=curve_P256):
+def decrypt(private_key, s, T: Point, c_text, curve: Curve =curve_P256):
     l = 128
     U = multiply(T, private_key)
     bytes_u_x_ = bytes(str(U.x)[:8], 'utf-8')

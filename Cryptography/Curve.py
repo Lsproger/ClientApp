@@ -1,6 +1,6 @@
 # y2 = x3 + a x + b (mod m)
 # 4a^3 + 27b^2 ≠ 0 (mod m)
-from Cryptography.base.Point import Point
+from Cryptography.Point import Point
 
 
 class Curve:

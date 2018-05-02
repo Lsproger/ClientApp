@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
     QTextEdit, QGridLayout, QApplication, QPushButton)
 import time
 
+from Application.Cryptography.Algorithms import Point
 from Application.Requests import server_services
 
 
@@ -12,7 +13,7 @@ class KeySwapWindow(QWidget):
     __partner_addr = 'None'
     __partner_port = 'None'
 
-    def __init__(self, server_ip, sock, username):
+    def __init__(self, server_ip, sock, username, public: Point, private):
         super(KeySwapWindow, self).__init__()
         # запускаем метод рисующий виджеты окна
         self.__sock = sock
@@ -35,7 +36,10 @@ class KeySwapWindow(QWidget):
         self.partner_name_edit = QLineEdit()
         self.partner_connection_status_lbl = QLabel('Offline')
         connect_partner_btn = QPushButton('connect', self)
+        self.start_swap_btn = QPushButton('Start swap', self)
+
         connect_partner_btn.clicked.connect(self.ConnectPartnerBtnClicked)
+        self.start_swap_btn.clicked.connect(self.StartSwapBtnClicked)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -57,12 +61,15 @@ class KeySwapWindow(QWidget):
         grid.addWidget(partner_port, 5, 0)
         grid.addWidget(self.partner_port_lbl, 5, 1)
 
+        grid.addWidget(self.start_swap_btn, 4, 2, 2, 1)
+
+        self.start_swap_btn.hide()
+
         self.setLayout(grid)
 
         self.setGeometry(300, 300, 100, 100)
         self.setWindowTitle('Diffie-Hellman key swap')
         self.show()
-
 
     def ConnectPartnerBtnClicked(self):
         self.__sock.send(server_services['DiffieHellman'])
@@ -78,6 +85,15 @@ class KeySwapWindow(QWidget):
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
             self.UpdateLables(True)
 
+    def StartSwapBtnClicked(self):
+        self.__sock.send(b'SWAP')
+        resp = self.__sock.recv(1024)
+        if resp == b'OK':
+            pass
+
+
+
+
 
     def UpdateLables(self, isConnected):
         if isConnected:
@@ -88,6 +104,7 @@ class KeySwapWindow(QWidget):
         self.partner_connection_status_lbl.setText(self.__partner_status)
         self.partner_ip_lbl.setText(self.__partner_addr)
         self.partner_port_lbl.setText(self.__partner_port)
+        self.start_swap_btn.show()
 
 
 

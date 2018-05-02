@@ -1,5 +1,5 @@
-from Cryptography.base.Curve import *
-from Cryptography.base.EuclidianAlgorithm import *
+from Cryptography.Curve import *
+from Cryptography.EuclidianAlgorithm import *
 
 
 __a = curve_P256.a
@@ -48,6 +48,9 @@ def is_on_curve(point: Point, curve: Curve = curve_P256):
         return True
     x, y = point.x, point.y
     return ((y * y - x * x * x - curve.a * x - curve.b) % curve.m) == 0
+
+
+
 
 # 21 * P = 10101 * P = (((((2 * P) * 2) + P) * 2) * 2 + P)
 

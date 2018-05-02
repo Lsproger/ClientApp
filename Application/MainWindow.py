@@ -2,9 +2,9 @@ import socket
 from Application.Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QTextEdit, QGridLayout, QPushButton)
-from Cryptography.Algorithms.Functions import generate_keys
+from Cryptography.Functions import generate_keys
 from Application.KeySwapWindow import KeySwapWindow
-from Cryptography.base.Point import Point
+from Cryptography.Point import Point
 
 
 class MainWindow(QWidget):
