@@ -2,9 +2,9 @@ import socket
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QGridLayout, QPushButton, QMessageBox)
 
-from Application.Cryptography.Point import Point
-from Application.Requests import server_services, GetPublicKey
-from Application.Cryptography.Functions import get_secret
+from Cryptography.Point import Point
+from Requests import server_services, GetPublicKey
+from Cryptography.Functions import get_secret
 
 
 class KeySwapWindow(QWidget):
@@ -112,8 +112,6 @@ class KeySwapWindow(QWidget):
         except ConnectionRefusedError:
             print('Connection refused')
 
-
-
     def ShowDialog(self, shared_key):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
@@ -122,7 +120,7 @@ class KeySwapWindow(QWidget):
         msg.setInformativeText("This is your shared key. Save this info!")
         msg.setWindowTitle("Shared key")
         msg.setDetailedText("It will disappear if you close!")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
     def UpdateLables(self, isConnected):

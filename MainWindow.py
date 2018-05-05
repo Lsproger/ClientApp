@@ -1,12 +1,13 @@
 import socket
 import threading
+import os
 
-from Application.Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
+from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QTextEdit, QGridLayout, QPushButton, QMessageBox)
-from Application.Cryptography.Functions import generate_keys, get_secret
-from Application.KeySwapWindow import KeySwapWindow
-from Application.Cryptography.Point import Point
+from Cryptography.Functions import generate_keys, get_secret
+from KeySwapWindow import KeySwapWindow
+from Cryptography.Point import Point
 
 
 class MainWindow(QWidget):
@@ -23,7 +24,7 @@ class MainWindow(QWidget):
     __lastusername = ''
     __port = 9090
     __username = ''
-    __filename = 'Application/Keys/{name}.txt'
+    __filename = os.getcwd() + '/Keys/{name}.txt'
     __public_key = Point(0, 0)
     __private_key = 0
     __server_ip = '127.0.0.1'
@@ -149,10 +150,12 @@ class MainWindow(QWidget):
 
     def SavePrivateKey(self, key):
         try:
+
             f = open(self.__filename.format(name=self.__username), 'w')
-            f.write(key)
+            f.write(str(key))
             f.close()
         except Exception:
+            print('file not opened on way ' + self.__filename.format(name=self.__username))
             f.close()
 
     def SaveKeys(self, private_key, public_key, csocket: socket):
@@ -190,33 +193,35 @@ class MainWindow(QWidget):
 
     def Listen(self, sock: socket, param):
         while 1:
-            conn, addr = sock.accept()
-            client_name = conn.recv(1024)
-            print('Client on swap', client_name)
-            # service = conn.recv(1024)
-            print('Service')
-            # if service == b'SWAP':
-            if 1 == 1:
-                conn.send(b'SWAP')
-                print('send SWAP')
-                partner_public_mas = GetPublicKey(str(client_name), self.__ssocket)
-                print('Get public key')
-                partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-                secret = get_secret(int(self.__private_key), partner_public)
-                self.ShowDialog(secret)
-            else:
-                conn.send(b'NO')
-            conn.close()
+            try:
+                conn, addr = sock.accept()
+                client_name = conn.recv(1024).decode(encoding='utf-8')
+                print('Client on swap', client_name)
+                # service = conn.recv(1024)
+                print('Service')
+                # if service == b'SWAP':
+                if 1 == 1:
+                    conn.send(b'SWAP')
+                    print('send SWAP')
+                    partner_public_mas = GetPublicKey(client_name, self.__ssocket)
+                    print('Get public key')
+                    partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+                    secret = get_secret(int(self.__private_key), partner_public)
+                    self.ShowDialog(secret, self.__username)
+                else:
+                    conn.send(b'NO')
+            except Exception as e:
+                print('Exception on MessageBox', e.__repr__())
 
-    def ShowDialog(self, shared_key):
+    def ShowDialog(self, shared_key, name):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
 
         msg.setText(str(shared_key.x))
-        msg.setInformativeText("This is your shared key. Save this info!")
+        msg.setInformativeText(name + ", this is your shared key. Save this info!")
         msg.setWindowTitle("Shared key")
         msg.setDetailedText("It will disappear if you close!")
-        msg.setStandardButtons(QMessageBox.Ok)
+        msg.setStandardButtons(QMessageBox.Cancel)
         msg.exec_()
 
     def CreateListener(self):
