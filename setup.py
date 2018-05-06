@@ -19,4 +19,4 @@ setup(name='hello_world',
       description='My Hello World App!',
       executables=executables,
       options=options,
-      requires=['cx_Freeze', 'PyQt5'])
+      requires=['cx_Freeze', 'PyQt5', 'pbkdf2', 'Crypto'])

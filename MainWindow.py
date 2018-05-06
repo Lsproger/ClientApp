@@ -97,6 +97,7 @@ class MainWindow(QWidget):
         connect_server_btn.clicked.connect(self.ConnectServerBtnClicked)
         gen_keys_btn.clicked.connect(self.GenKeysBtnClicked)
         key_swap_btn.clicked.connect(self.KeySwapBtnClicked)
+        psec2_btn.clicked.connect(self.PSEC2BtnClicked)
 
         self.setGeometry(300, 300, 650, 100)
         self.setWindowTitle('Elliptic cryptographer')
@@ -181,6 +182,11 @@ class MainWindow(QWidget):
         self.addwin = KeySwapWindow(
             self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
+    def PSEC2BtnClicked(self):
+        pass
+        msg = QMessageBox.
+
+
     def UpdateLables(self):
         self.private_key.setText(str(self.__private_key))
         self.public_key.setText('x: %d <br> y: %d' % (self.__public_key.x, self.__public_key.y))
@@ -207,24 +213,8 @@ class MainWindow(QWidget):
                 if reply == QMessageBox.Yes:
                     print('Yes')
                 conn.close()
-                    # self.ShowDialog(secret, self.__username)
         except Exception as e:
                 print('Exception on MessageBox', e.__repr__(), e.__str__())
-
-    # def ShowDialog(self, shared_key, name):
-    #     msg = QMessageBox()
-    #     msg.setIcon(QMessageBox.Information)
-    #
-    #     msg.setText(str(shared_key.x))
-    #     msg.setInformativeText(name + ", this is your shared key. Save this info!")
-    #     msg.setWindowTitle("Shared key")
-    #     msg.setDetailedText("It will disappear if you close!")
-    #     msg.setStandardButtons(QMessageBox.Ok)
-    #     msg.exec_()
-
-    def ShowDialog(self, secren, name):
-        QMessageBox.about(self, "My message box", "Text1 = %s, Text2 = %s" % (
-            self.edit1.text(), self.edit2.text()))
 
     def CreateListener(self):
         sock = socket.socket()
