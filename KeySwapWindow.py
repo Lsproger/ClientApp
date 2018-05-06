@@ -108,16 +108,16 @@ class KeySwapWindow(QWidget):
                 self.__partner_public = Point(partner_public[0], partner_public[1])
                 secret = get_secret(int(self.__private), self.__partner_public)
                 print(secret)
-                self.ShowDialog(secret)
+                self.ShowDialog(secret, self.__username)
         except ConnectionRefusedError:
             print('Connection refused')
 
-    def ShowDialog(self, shared_key):
+    def ShowDialog(self, shared_key, name):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
 
         msg.setText(str(shared_key.x))
-        msg.setInformativeText("This is your shared key. Save this info!")
+        msg.setInformativeText(name + ", this is your shared key. Save this info!")
         msg.setWindowTitle("Shared key")
         msg.setDetailedText("It will disappear if you close!")
         msg.setStandardButtons(QMessageBox.Ok)

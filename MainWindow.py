@@ -192,37 +192,39 @@ class MainWindow(QWidget):
         listener.start()
 
     def Listen(self, sock: socket, param):
-        while 1:
-            try:
+        try:
+            while 1:
                 conn, addr = sock.accept()
                 client_name = conn.recv(1024).decode(encoding='utf-8')
-                print('Client on swap', client_name)
-                # service = conn.recv(1024)
-                print('Service')
-                # if service == b'SWAP':
-                if 1 == 1:
-                    conn.send(b'SWAP')
-                    print('send SWAP')
-                    partner_public_mas = GetPublicKey(client_name, self.__ssocket)
-                    print('Get public key')
-                    partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-                    secret = get_secret(int(self.__private_key), partner_public)
-                    self.ShowDialog(secret, self.__username)
-                else:
-                    conn.send(b'NO')
-            except Exception as e:
-                print('Exception on MessageBox', e.__repr__())
+                conn.send(b'SWAP')
+                print('send SWAP')
+                partner_public_mas = GetPublicKey(client_name, self.__ssocket)
+                print('Get public key')
+                partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+                secret = get_secret(int(self.__private_key), partner_public)
+                reply = QMessageBox.question(self, 'Shared key', str(secret.x), QMessageBox.Yes,
+                                 QMessageBox.Yes)
+                if reply == QMessageBox.Yes:
+                    print('Yes')
+                conn.close()
+                    # self.ShowDialog(secret, self.__username)
+        except Exception as e:
+                print('Exception on MessageBox', e.__repr__(), e.__str__())
 
-    def ShowDialog(self, shared_key, name):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
+    # def ShowDialog(self, shared_key, name):
+    #     msg = QMessageBox()
+    #     msg.setIcon(QMessageBox.Information)
+    #
+    #     msg.setText(str(shared_key.x))
+    #     msg.setInformativeText(name + ", this is your shared key. Save this info!")
+    #     msg.setWindowTitle("Shared key")
+    #     msg.setDetailedText("It will disappear if you close!")
+    #     msg.setStandardButtons(QMessageBox.Ok)
+    #     msg.exec_()
 
-        msg.setText(str(shared_key.x))
-        msg.setInformativeText(name + ", this is your shared key. Save this info!")
-        msg.setWindowTitle("Shared key")
-        msg.setDetailedText("It will disappear if you close!")
-        msg.setStandardButtons(QMessageBox.Cancel)
-        msg.exec_()
+    def ShowDialog(self, secren, name):
+        QMessageBox.about(self, "My message box", "Text1 = %s, Text2 = %s" % (
+            self.edit1.text(), self.edit2.text()))
 
     def CreateListener(self):
         sock = socket.socket()
