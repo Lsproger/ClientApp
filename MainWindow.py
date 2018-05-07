@@ -116,6 +116,7 @@ class MainWindow(QWidget):
         # Implementation of loading keys from server
 
     def LoadPrivateKey(self):
+        ensure_dir(self.__filename.format(name=self.__username))
         f = open(self.__filename.format(name=self.__username), 'r')
         self.__private_key = f.read()
         f.close()
@@ -249,3 +250,9 @@ def FormatRecievedMessageFtomBytes(params, c_text, private):
     sender = from_name
     msg_text = decrypt(private, decoded_s, T, c_text)
     return msg_text.decode(encoding='utf-8'), sender
+
+
+def ensure_dir(file_path):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
