@@ -18,4 +18,4 @@ s, T, c_Text = encrypt(Qa, 'Hello, mtfckr')
 print(c_Text)
 text = decrypt(da, s, T, c_Text)
 
-print(text)
+print(text.decode(encoding='utf-8'))

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
 
 from Cryptography.Point import Point
 from Requests import server_services, GetPublicKey
-from Cryptography.Functions import get_secret
+from Cryptography.PSEC_KEM import encrypt
 
 
 class SendMessageWindow(QWidget):
@@ -39,7 +39,7 @@ class SendMessageWindow(QWidget):
 
         self.send_msg_btn = QPushButton('send', self)
 
-        self.send_msg_btn.clicked.connect(self.ConnectPartnerBtnClicked)
+        self.send_msg_btn.clicked.connect(self.SendMsgBtnClicked)
 
         shared_key_lbl = QLabel('Your shared key: ')
 
@@ -64,42 +64,46 @@ class SendMessageWindow(QWidget):
         self.setWindowTitle('Send message')
         self.show()
 
-    def ConnectPartnerBtnClicked(self):
-        self.__sock.send(server_services['DiffieHellman'])
+    def SendMsgBtnClicked(self):
+        # try:
+        self.ConnectPartner()
+        sock = socket.socket()
+        sock.connect((str(self.__partner_addr), int(self.__partner_port)))
+        print('connected to partner', sock)
+        sock.send(b'MSG')
+        resp = sock.recv(1024)
+        # sock.send(b'SWAP')
+        print('sended name & swap')
+        if resp == b'MSG':
+            # sock.send(bytes(self.__username, 'utf-8'))
+            partner_public = GetPublicKey(self.__partner_name, self.__sock)
+            self.__partner_public = Point(partner_public[0], partner_public[1])
+            s, T, c_text = encrypt(self.__partner_public, self.msg_edit.toPlainText())
+            Tsrt = str(T.x) + ' ' + str(T.y)
+            str_params = str(s) + ' ' + Tsrt
+            text_to_send = str(self.__username) + ' ' + str_params
+            sock.send(bytes(text_to_send, encoding='utf-8'))
+            if sock.recv(1024) == b'Ok':
+                sock.send(c_text)
+            self.ShowDialog()
+        # except ConnectionRefusedError:
+        #     print('Connection refused')
+
+    def ConnectPartner(self):
+        self.__sock.send(server_services['SendMessage'])
         resp = self.__sock.recv(1024)
-        if resp == server_services['DiffieHellman']:
+        if resp == server_services['SendMessage']:
             self.__partner_name = self.partner_name_edit.text()
             self.__sock.send(
                 bytes(self.__partner_name, 'utf-8'))
             resp = self.__sock.recv(1024)
             if resp == b'Fail':
-                self.partner_connection_status_lbl.setText('Not connected')
                 return 0
             resp = resp.decode(encoding='utf-8').split(' ')
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
-            self.UpdateLables(True)
 
-    def StartSwapBtnClicked(self):
-        try:
-            sock = socket.socket()
-            sock.connect((str(self.__partner_addr), int(self.__partner_port)))
-            print('connected to partner', sock)
-            sock.send(bytes(self.__username, 'utf-8'))
-            # sock.send(b'SWAP')
-            print('sended name & swap')
-            resp = sock.recv(1024)
-            if resp == b'SWAP':
-                partner_public = GetPublicKey(self.__partner_name, self.__sock)
-                self.__partner_public = Point(partner_public[0], partner_public[1])
-                secret = get_secret(int(self.__private), self.__partner_public)
-                print(secret)
-                self.ShowDialog(secret, self.__username)
-        except ConnectionRefusedError:
-            print('Connection refused')
-
-    def ShowDialog(self, shared_key, name):
-        msg = name + ', your shared key is:\n' + str(shared_key.x)
-        reply = QMessageBox.question(self, 'Shared key', msg, QMessageBox.Yes,
+    def ShowDialog(self):
+        reply = QMessageBox.question(self, 'Shared key', 'Sended!', QMessageBox.Yes,
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             print('Yes')
@@ -112,17 +116,4 @@ class SendMessageWindow(QWidget):
         # msg.setDetailedText("It will disappear if you close!")
         # msg.setStandardButtons(QMessageBox.Ok)
         # msg.exec_()
-
-    def UpdateLables(self, isConnected):
-        if isConnected:
-            self.__partner_status = 'Online'
-        else:
-            self.__partner_status = 'Offline'
-
-        self.partner_connection_status_lbl.setText(self.__partner_status)
-        self.partner_ip_lbl.setText(self.__partner_addr)
-        self.partner_port_lbl.setText(self.__partner_port)
-        self.start_swap_btn.show()
-
-
 
