@@ -10,13 +10,13 @@ options = {
     'build_exe': {
         'include_msvcr': True,
         'zip_include_packages': zip_include_packages,
-        'build_exe': 'build_windows',
+        'build_exe': 'build_Cryptor',
     }
 }
 
-setup(name='hello_world',
+setup(name='Cryptor',
       version='0.0.12',
-      description='My Hello World App!',
+      description='Cryptor on elliptic curves',
       executables=executables,
       options=options,
       requires=['cx_Freeze', 'PyQt5', 'pbkdf2', 'Crypto'])
