@@ -202,8 +202,8 @@ class MainWindow(QWidget):
         try:
             while 1:
                 conn, addr = sock.accept()
-                serv = conn.recv(1024)
-                if serv == b'SWAP':
+                service = conn.recv(1024)
+                if service == b'SWAP':
                     conn.send(b'SWAP')
                     client_name = conn.recv(1024).decode(encoding='utf-8')
                     print('send SWAP')
@@ -217,13 +217,13 @@ class MainWindow(QWidget):
                     if reply == QMessageBox.Yes:
                         print('Yes')
                     conn.close()
-                if serv == b'MSG':
+                if service == b'MSG':
                     conn.send(b'MSG')
                     params = conn.recv(4096)
                     conn.send(b'Ok')
                     c_text = conn.recv(1024)
-                    msg, sender = FormatRecievedMessageFtomBytes(params, c_text, self.__private_key)
-                    text_to_show = self.__username + ', you have recieved message from %s:\n %s' % sender % msg
+                    msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(self.__private_key))
+                    text_to_show = self.__username + ', you have recieved message from %s:\n %s' % (sender, msg)
                     reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
                                                  QMessageBox.Yes)
                     if reply == QMessageBox.Yes:
@@ -247,8 +247,8 @@ class MainWindow(QWidget):
 
 def FormatRecievedMessageFtomBytes(params, c_text, private):
     from_name, s, Tx, Ty = params.decode(encoding='utf-8').split(' ')
-    T = Point(int(Tx.decode(encoding='utf-8')), int(Ty.decode(encoding='utf-8')))
-    decoded_s = int(s.decode(encoding='utf-8'))
-    sender = from_name.decode(encoding='utf-8')
+    T = Point(int(Tx), int(Ty))
+    decoded_s = int(s)
+    sender = from_name
     msg_text = decrypt(private, decoded_s, T, c_text)
-    return msg_text, sender
+    return msg_text.decode(encoding='utf-8'), sender
