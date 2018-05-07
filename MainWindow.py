@@ -145,13 +145,10 @@ class MainWindow(QWidget):
             self.StartListen(self.__listener_sock)
         else:
             self.__connect_status = 'Not connected! Address error!'
-
-
         self.UpdateLables()
 
     def SavePrivateKey(self, key):
         try:
-
             f = open(self.__filename.format(name=self.__username), 'w')
             f.write(str(key))
             f.close()
@@ -183,8 +180,10 @@ class MainWindow(QWidget):
             self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
     def PSEC2BtnClicked(self):
-        pass
-        msg = QMessageBox.
+        if self.__connect_status == 'Not connected':
+            return 0
+        self.addwin = KeySwapWindow(
+            self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
 
     def UpdateLables(self):
@@ -208,8 +207,9 @@ class MainWindow(QWidget):
                 print('Get public key')
                 partner_public = Point(partner_public_mas[0], partner_public_mas[1])
                 secret = get_secret(int(self.__private_key), partner_public)
-                reply = QMessageBox.question(self, 'Shared key', str(secret.x), QMessageBox.Yes,
-                                 QMessageBox.Yes)
+                msgtext = self.__username + ', your shared key is:\n' + str(secret.x)
+                reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
+                                             QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
                     print('Yes')
                 conn.close()
