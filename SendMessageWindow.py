@@ -1,13 +1,13 @@
 import socket
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
-                             QGridLayout, QPushButton, QMessageBox)
+                             QGridLayout, QPushButton, QMessageBox, QTextEdit)
 
 from Cryptography.Point import Point
 from Requests import server_services, GetPublicKey
 from Cryptography.Functions import get_secret
 
 
-class KeySwapWindow(QWidget):
+class SendMessageWindow(QWidget):
 
     __partner_status = 'offline'
     __partner_addr = 'None'
@@ -18,7 +18,7 @@ class KeySwapWindow(QWidget):
     __public = None
 
     def __init__(self, server_ip, sock, username, public: Point, private):
-        super(KeySwapWindow, self).__init__()
+        super(SendMessageWindow, self).__init__()
         # запускаем метод рисующий виджеты окна
         self.__sock = sock
         self.__username = username
@@ -32,51 +32,36 @@ class KeySwapWindow(QWidget):
         my_name_lbl = QLabel('Your username: ' + username)
         partner_connection = QLabel('Partner connection status:')
         partner_name = QLabel("Your partner's name")
-
-        partner_ip = QLabel('Partner ip: ')
-        partner_port = QLabel('Partner port: ')
-
-        self.partner_ip_lbl = QLabel(self.__partner_addr)
-        self.partner_port_lbl = QLabel(self.__partner_addr)
-
         self.partner_name_edit = QLineEdit()
-        self.partner_connection_status_lbl = QLabel('Offline')
-        connect_partner_btn = QPushButton('connect', self)
-        self.start_swap_btn = QPushButton('Start swap', self)
 
-        connect_partner_btn.clicked.connect(self.ConnectPartnerBtnClicked)
-        self.start_swap_btn.clicked.connect(self.StartSwapBtnClicked)
+        msglbl = QLabel('Input message text: ')
+        self.msg_edit = QTextEdit()
+
+        self.send_msg_btn = QPushButton('send', self)
+
+        self.send_msg_btn.clicked.connect(self.ConnectPartnerBtnClicked)
 
         shared_key_lbl = QLabel('Your shared key: ')
 
         grid = QGridLayout()
         grid.setSpacing(10)
 
-        grid.addWidget(server_ip_lbl, 0, 0, 1, 3)
+        grid.addWidget(server_ip_lbl, 0, 0, 1, 2)
 
-        grid.addWidget(my_name_lbl, 1, 0, 1, 3)
+        grid.addWidget(my_name_lbl, 1, 0, 1, 2)
 
         grid.addWidget(partner_name, 2, 0)
-        grid.addWidget(self.partner_name_edit, 2, 1, 1, 2)
+        grid.addWidget(self.partner_name_edit, 2, 1)
 
-        grid.addWidget(partner_connection, 3, 0)
-        grid.addWidget(self.partner_connection_status_lbl, 3, 1)
-        grid.addWidget(connect_partner_btn, 3, 2)
+        grid.addWidget(msglbl, 3, 0)
+        grid.addWidget(self.msg_edit, 3, 1)
 
-        grid.addWidget(partner_ip, 4, 0)
-        grid.addWidget(self.partner_ip_lbl, 4, 1)
-
-        grid.addWidget(partner_port, 5, 0)
-        grid.addWidget(self.partner_port_lbl, 5, 1)
-
-        grid.addWidget(self.start_swap_btn, 4, 2, 2, 1)
-
-        self.start_swap_btn.hide()
+        grid.addWidget(self.send_msg_btn, 4, 1)
 
         self.setLayout(grid)
 
         self.setGeometry(300, 300, 100, 100)
-        self.setWindowTitle('Diffie-Hellman key swap')
+        self.setWindowTitle('Send message')
         self.show()
 
     def ConnectPartnerBtnClicked(self):

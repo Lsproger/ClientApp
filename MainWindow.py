@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QTextEdit, QGridLayout, QPushButton, QMessageBox)
 from Cryptography.Functions import generate_keys, get_secret
 from KeySwapWindow import KeySwapWindow
+from SendMessageWindow import SendMessageWindow
 from Cryptography.Point import Point
 
 
@@ -182,7 +183,7 @@ class MainWindow(QWidget):
     def PSEC2BtnClicked(self):
         if self.__connect_status == 'Not connected':
             return 0
-        self.addwin = KeySwapWindow(
+        self.addwin = SendMessageWindow(
             self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
 
