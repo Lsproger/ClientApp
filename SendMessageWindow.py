@@ -79,9 +79,9 @@ class SendMessageWindow(QWidget):
             partner_public = GetPublicKey(self.__partner_name, self.__sock)
             self.__partner_public = Point(partner_public[0], partner_public[1])
             s, T, c_text = encrypt(self.__partner_public, self.msg_edit.toPlainText())
-            Tsrt = str(T.x) + ' ' + str(T.y)
-            str_params = str(s) + ' ' + Tsrt
-            text_to_send = str(self.__username) + ' ' + str_params
+            Tsrt = str(T.x) + ';' + str(T.y)
+            str_params = str(s) + ';' + Tsrt
+            text_to_send = str(self.__username) + ';' + str_params
             sock.send(bytes(text_to_send, encoding='utf-8'))
             if sock.recv(1024) == b'Ok':
                 sock.send(c_text)
@@ -99,7 +99,7 @@ class SendMessageWindow(QWidget):
             resp = self.__sock.recv(1024)
             if resp == b'Fail':
                 return 0
-            resp = resp.decode(encoding='utf-8').split(' ')
+            resp = resp.decode(encoding='utf-8').split(';')
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
 
     def ShowDialog(self):

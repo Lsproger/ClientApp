@@ -40,7 +40,7 @@ def GetPublicKey(username: str, csocket: socket):
         resp = csocket.recv(1024)
         if resp == server_services['GetPublicKey']:
             csocket.send(bytes(username, 'utf-8'))
-            key = csocket.recv(1024).decode(encoding='utf-8').split(' ')
+            key = csocket.recv(1024).decode(encoding='utf-8').split(';')
         else:
             key = 0, 0
     except Exception:

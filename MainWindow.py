@@ -168,7 +168,7 @@ class MainWindow(QWidget):
             sock = self.__ssocket
             if sock is not None:
                 self.__private_key, self.__public_key = generate_keys()
-                key = str(self.__public_key.x) + ' ' + str(self.__public_key.y)
+                key = str(self.__public_key.x) + ';' + str(self.__public_key.y)
                 isSaved = self.SaveKeys(str(self.__private_key), key, self.__ssocket)
 
             self.UpdateLables()
@@ -198,7 +198,7 @@ class MainWindow(QWidget):
         listener.setDaemon(True)
         listener.start()
 
-    def Listen(self, sock: socket, param):
+    def Listen(self, sock: socket, flag):
         try:
             while 1:
                 conn, addr = sock.accept()
@@ -216,8 +216,8 @@ class MainWindow(QWidget):
                                                  QMessageBox.Yes)
                     if reply == QMessageBox.Yes:
                         print('Yes')
-                    conn.close()
-                if service == b'MSG':
+
+                elif service == b'MSG':
                     conn.send(b'MSG')
                     params = conn.recv(4096)
                     conn.send(b'Ok')
@@ -228,7 +228,7 @@ class MainWindow(QWidget):
                                                  QMessageBox.Yes)
                     if reply == QMessageBox.Yes:
                         print('Yes')
-                    conn.close()
+                conn.close()
         except Exception as e:
                 print('Exception on MessageBox', e.__repr__(), e.__str__())
 
@@ -246,7 +246,7 @@ class MainWindow(QWidget):
 
 
 def FormatRecievedMessageFtomBytes(params, c_text, private):
-    from_name, s, Tx, Ty = params.decode(encoding='utf-8').split(' ')
+    from_name, s, Tx, Ty = params.decode(encoding='utf-8').split(';')
     T = Point(int(Tx), int(Ty))
     decoded_s = int(s)
     sender = from_name

@@ -90,7 +90,7 @@ class KeySwapWindow(QWidget):
             if resp == b'Fail':
                 self.partner_connection_status_lbl.setText('Not connected')
                 return 0
-            resp = resp.decode(encoding='utf-8').split(' ')
+            resp = resp.decode(encoding='utf-8').split(';')
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
             self.UpdateLables(True)
 
