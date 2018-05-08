@@ -2,6 +2,7 @@ import socket
 import threading
 import os
 
+from MsgBox import MsgBox
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QTextEdit, QGridLayout, QPushButton, QMessageBox)
@@ -212,6 +213,8 @@ class MainWindow(QWidget):
                 partner_public = Point(partner_public_mas[0], partner_public_mas[1])
                 secret = get_secret(int(self.__private_key), partner_public)
                 msgtext = self.__username + ', your shared key with %s is:\n' % client_name + str(secret.x)
+
+                print('Vmesto msgBox', msgtext)
                 reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
                                              QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
