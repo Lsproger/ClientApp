@@ -23,3 +23,9 @@ class MsgBox(QWidget):
         self.setGeometry(300, 300, 100, 100)
         self.setWindowTitle('Shared key!')
         self.show()
+
+
+def ShowMsg(msg_text):
+    app = QApplication(sys.argv)
+    ex = MsgBox(msg_text)
+    sys.exit(app.exec_())

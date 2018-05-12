@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+import time
 
 from MsgBox import MsgBox
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
@@ -145,8 +146,8 @@ class MainWindow(QWidget):
             self.LoadKeys()
 
             self.__listener_sock, self.__listener_port = self.CreateListener()
-            RegisterListener(self.__ssocket, self.__listener_port)
             self.StartListen(self.__listener_sock)
+            RegisterListener(self.__ssocket, self.__listener_port)
         else:
             self.__connect_status = 'Not connected! Address error!'
         self.UpdateLables()
@@ -189,14 +190,25 @@ class MainWindow(QWidget):
         self.addwin = SendMessageWindow(
             self.__server_ip, self.__ssocket, self.__username, self.__public_key, self.__private_key)
 
-
     def UpdateLables(self):
         self.private_key.setText(str(self.__private_key))
         self.public_key.setText('x: %d <br> y: %d' % (self.__public_key.x, self.__public_key.y))
         self.connection_status_lbl.setText(self.__connect_status)
 
+    def CreateListener(self):
+        sock = socket.socket()
+        port = 50000
+        while 1:
+            try:
+                sock.bind(('', port))
+                sock.listen(1)
+                break
+            except OSError:
+                port = port + 1
+        return sock, port
+
     def StartListen(self, sock: socket):
-        listener = threading.Thread(target=self.Listen, args=(sock, None))
+        listener = threading.Thread(target=self.Listen, args=(sock, 1))
         listener.setDaemon(True)
         listener.start()
 
@@ -215,10 +227,16 @@ class MainWindow(QWidget):
                 msgtext = self.__username + ', your shared key with %s is:\n' % client_name + str(secret.x)
 
                 print('Vmesto msgBox', msgtext)
-                reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
-                                             QMessageBox.Yes)
-                if reply == QMessageBox.Yes:
-                    print('Yes')
+
+                # reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
+                #                              QMessageBox.Yes)
+                # if reply == QMessageBox.Yes:
+                #     print('yes')
+                # else:
+                #     print('no')
+                conn.close()
+                print('Hi. now im start lagging')
+                time.sleep(5)
 
             elif service == b'MSG':
                 conn.send(b'MSG')
@@ -227,23 +245,15 @@ class MainWindow(QWidget):
                 c_text = conn.recv(1024)
                 msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(self.__private_key))
                 text_to_show = self.__username + ', you have recieved message from %s:\n %s' % (sender, msg)
-                reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
-                                             QMessageBox.Yes)
-                if reply == QMessageBox.Yes:
-                    print('Yes')
+                # reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
+                #                              QMessageBox.Yes)
+                # if reply == QMessageBox.Yes:
+                #     print('Yes')
+                # print('Hi. now im start lagging')
+                # time.sleep(5)
+                print('Vmesto msgboxmsg:', text_to_show)
             conn.close()
 
-    def CreateListener(self):
-        sock = socket.socket()
-        port = 50000
-        while 1:
-            try:
-                sock.bind(('', port))
-                sock.listen(1)
-                break
-            except OSError:
-                port = port + 1
-        return sock, port
 
 
 def FormatRecievedMessageFtomBytes(params, c_text, private):
