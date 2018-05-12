@@ -1,9 +1,10 @@
+import multiprocessing
 import socket
 import threading
 import os
 import time
 
-from MsgBox import MsgBox
+from MsgBox import MsgBox, ShowMsg
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
 from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
                              QTextEdit, QGridLayout, QPushButton, QMessageBox)
@@ -208,9 +209,11 @@ class MainWindow(QWidget):
         return sock, port
 
     def StartListen(self, sock: socket):
-        listener = threading.Thread(target=self.Listen, args=(sock, 1))
-        listener.setDaemon(True)
-        listener.start()
+        lstnr = multiprocessing.Process(target=ListenProc, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
+        lstnr.start()
+        # listener = threading.Thread(target=self.Listen, args=(sock, 1))
+        # listener.setDaemon(True)
+        # listener.start()
 
     def Listen(self, sock: socket, flag):
         while 1:
@@ -255,7 +258,6 @@ class MainWindow(QWidget):
             conn.close()
 
 
-
 def FormatRecievedMessageFtomBytes(params, c_text, private):
     from_name, s, Tx, Ty = params.decode(encoding='utf-8').split(';')
     T = Point(int(Tx), int(Ty))
@@ -269,3 +271,47 @@ def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+def ListenProc(sock: socket, private, myusername, ssocket):
+    while 1:
+        conn, addr = sock.accept()
+        service = conn.recv(1024)
+        if service == b'SWAP':
+            conn.send(b'SWAP')
+            client_name = conn.recv(1024).decode(encoding='utf-8')
+            print('send SWAP')
+            partner_public_mas = GetPublicKey(client_name, ssocket)
+            print('Get public key')
+            partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+            secret = get_secret(int(private), partner_public)
+            msgtext = myusername + ', your shared key with %s is:\n' % client_name + str(secret.x)
+
+            print('Vmesto msgBox', msgtext)
+
+            ShowMsg(msgtext)
+            # reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
+            #                              QMessageBox.Yes)
+            # if reply == QMessageBox.Yes:
+            #     print('yes')
+            # else:
+            #     print('no')
+            conn.close()
+            print('Hi. now im start lagging')
+            time.sleep(5)
+
+        elif service == b'MSG':
+            conn.send(b'MSG')
+            params = conn.recv(4096)
+            conn.send(b'Ok')
+            c_text = conn.recv(1024)
+            msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(private))
+            text_to_show = myusername + ', you have recieved message from %s:\n %s' % (sender, msg)
+            # reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
+            #                              QMessageBox.Yes)
+            # if reply == QMessageBox.Yes:
+            #     print('Yes')
+            # print('Hi. now im start lagging')
+            # time.sleep(5)
+            print('Vmesto msgboxmsg:', text_to_show)
+            ShowMsg(text_to_show)
+        conn.close()
