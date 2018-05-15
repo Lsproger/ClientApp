@@ -1,7 +1,7 @@
 from cx_Freeze import setup, Executable
 
 executables = [Executable('Main.py',
-                          targetName='MainApp.exe',
+                          targetName='Cryptor.exe',
                           base='Win32GUI')]
 
 zip_include_packages = ['collections', 'encodings', 'importlib', 'QApplication']
@@ -10,7 +10,7 @@ options = {
     'build_exe': {
         'include_msvcr': True,
         'zip_include_packages': zip_include_packages,
-        'build_exe': 'build_Cryptor',
+        'build_exe': 'BUILD',
     }
 }
 

@@ -66,7 +66,8 @@ class SendMessageWindow(QWidget):
 
     def SendMsgBtnClicked(self):
         # try:
-        self.ConnectPartner()
+        if self.ConnectPartner() == 0:
+            return 0
         sock = socket.socket()
         sock.connect((str(self.__partner_addr), int(self.__partner_port)))
         print('connected to partner', sock)
@@ -90,6 +91,9 @@ class SendMessageWindow(QWidget):
         #     print('Connection refused')
 
     def ConnectPartner(self):
+        if self.partner_name_edit.text() == self.__username:
+            QMessageBox.about(self, 'Caution', 'You cannot connect to yourself!')
+            return 0
         self.__sock.send(server_services['SendMessage'])
         resp = self.__sock.recv(1024)
         if resp == server_services['SendMessage']:

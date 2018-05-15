@@ -215,47 +215,47 @@ class MainWindow(QWidget):
         # listener.setDaemon(True)
         # listener.start()
 
-    def Listen(self, sock: socket, flag):
-        while 1:
-            conn, addr = sock.accept()
-            service = conn.recv(1024)
-            if service == b'SWAP':
-                conn.send(b'SWAP')
-                client_name = conn.recv(1024).decode(encoding='utf-8')
-                print('send SWAP')
-                partner_public_mas = GetPublicKey(client_name, self.__ssocket)
-                print('Get public key')
-                partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-                secret = get_secret(int(self.__private_key), partner_public)
-                msgtext = self.__username + ', your shared key with %s is:\n' % client_name + str(secret.x)
-
-                print('Vmesto msgBox', msgtext)
-
-                # reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
-                #                              QMessageBox.Yes)
-                # if reply == QMessageBox.Yes:
-                #     print('yes')
-                # else:
-                #     print('no')
-                conn.close()
-                print('Hi. now im start lagging')
-                time.sleep(5)
-
-            elif service == b'MSG':
-                conn.send(b'MSG')
-                params = conn.recv(4096)
-                conn.send(b'Ok')
-                c_text = conn.recv(1024)
-                msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(self.__private_key))
-                text_to_show = self.__username + ', you have recieved message from %s:\n %s' % (sender, msg)
-                # reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
-                #                              QMessageBox.Yes)
-                # if reply == QMessageBox.Yes:
-                #     print('Yes')
-                # print('Hi. now im start lagging')
-                # time.sleep(5)
-                print('Vmesto msgboxmsg:', text_to_show)
-            conn.close()
+    # def Listen(self, sock: socket, flag):
+    #     while 1:
+    #         conn, addr = sock.accept()
+    #         service = conn.recv(1024)
+    #         if service == b'SWAP':
+    #             conn.send(b'SWAP')
+    #             client_name = conn.recv(1024).decode(encoding='utf-8')
+    #             print('send SWAP')
+    #             partner_public_mas = GetPublicKey(client_name, self.__ssocket)
+    #             print('Get public key')
+    #             partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+    #             secret = get_secret(int(self.__private_key), partner_public)
+    #             msgtext = self.__username + ', your shared key with %s is:\n' % client_name + str(secret.x)
+    #
+    #             print('Vmesto msgBox', msgtext)
+    #
+    #             # reply = QMessageBox.question(self, 'Shared key', msgtext, QMessageBox.Yes,
+    #             #                              QMessageBox.Yes)
+    #             # if reply == QMessageBox.Yes:
+    #             #     print('yes')
+    #             # else:
+    #             #     print('no')
+    #             conn.close()
+    #             print('Hi. now im start lagging')
+    #             time.sleep(5)
+    #
+    #         elif service == b'MSG':
+    #             conn.send(b'MSG')
+    #             params = conn.recv(4096)
+    #             conn.send(b'Ok')
+    #             c_text = conn.recv(1024)
+    #             msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(self.__private_key))
+    #             text_to_show = self.__username + ', you have recieved message from %s:\n %s' % (sender, msg)
+    #             # reply = QMessageBox.question(self, 'Message', text_to_show, QMessageBox.Yes,
+    #             #                              QMessageBox.Yes)
+    #             # if reply == QMessageBox.Yes:
+    #             #     print('Yes')
+    #             # print('Hi. now im start lagging')
+    #             # time.sleep(5)
+    #             print('Vmesto msgboxmsg:', text_to_show)
+    #         conn.close()
 
 
 def FormatRecievedMessageFtomBytes(params, c_text, private):

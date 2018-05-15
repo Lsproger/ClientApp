@@ -80,6 +80,9 @@ class KeySwapWindow(QWidget):
         self.show()
 
     def ConnectPartnerBtnClicked(self):
+        if self.partner_name_edit.text() == self.__username:
+            QMessageBox.about(self, 'Caution', 'You cannot connect to yourself!')
+            return 0
         self.__sock.send(server_services['DiffieHellman'])
         resp = self.__sock.recv(1024)
         if resp == server_services['DiffieHellman']:
