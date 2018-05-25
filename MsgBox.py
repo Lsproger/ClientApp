@@ -21,7 +21,7 @@ class MsgBox(QWidget):
         self.setLayout(grid)
 
         self.setGeometry(300, 300, 100, 100)
-        self.setWindowTitle('Shared key!')
+        self.setWindowTitle('Message box')
         self.show()
 
 

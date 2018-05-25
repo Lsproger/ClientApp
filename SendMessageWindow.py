@@ -64,8 +64,8 @@ class SendMessageWindow(QWidget):
         self.setWindowTitle('Send message')
         self.show()
 
+
     def SendMsgBtnClicked(self):
-        # try:
         if self.ConnectPartner() == 0:
             return 0
         sock = socket.socket()
@@ -73,7 +73,6 @@ class SendMessageWindow(QWidget):
         print('connected to partner', sock)
         sock.send(b'MSG')
         resp = sock.recv(1024)
-        # sock.send(b'SWAP')
         print('sended name & swap')
         if resp == b'MSG':
             # sock.send(bytes(self.__username, 'utf-8'))
@@ -87,8 +86,6 @@ class SendMessageWindow(QWidget):
             if sock.recv(1024) == b'Ok':
                 sock.send(c_text)
             self.ShowDialog()
-        # except ConnectionRefusedError:
-        #     print('Connection refused')
 
     def ConnectPartner(self):
         if self.partner_name_edit.text() == self.__username:
@@ -107,17 +104,9 @@ class SendMessageWindow(QWidget):
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
 
     def ShowDialog(self):
-        reply = QMessageBox.question(self, 'Shared key', 'Sended!', QMessageBox.Yes,
+        reply = QMessageBox.question(self, 'Message', 'Sended!', QMessageBox.Yes,
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             print('Yes')
-        # msg = QMessageBox()
-        # msg.setIcon(QMessageBox.Information)
-        #
-        # msg.setText(str(shared_key.x))
-        # msg.setInformativeText(name + ", this is your shared key. Save this info!")
-        # msg.setWindowTitle("Shared key")
-        # msg.setDetailedText("It will disappear if you close!")
-        # msg.setStandardButtons(QMessageBox.Ok)
-        # msg.exec_()
+
 

@@ -1,8 +1,6 @@
 import multiprocessing
 import socket
 import os
-import time
-from concurrent.futures import thread
 
 from MsgBox import MsgBox, ShowMsg
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
@@ -55,7 +53,6 @@ class MainWindow(QWidget):
         connect_server_btn = QPushButton('Connect', self)
         gen_keys_btn = QPushButton('Generate keys', self)
         key_swap_btn = QPushButton('Diffie-Hellman', self)
-        create_ds_btn = QPushButton('Create digital signature', self)
         psec2_btn = QPushButton('Send message using PSEK-KEM algorythm (One-time note)', self)
 
         self.username = QLineEdit(username_lbl)
@@ -93,7 +90,6 @@ class MainWindow(QWidget):
 
         grid.addWidget(gen_keys_btn, 6, 0)
         grid.addWidget(key_swap_btn, 6, 1)
-        grid.addWidget(create_ds_btn, 6, 2)
 
         grid.addWidget(psec2_btn, 7, 0, 1, 3)
 
@@ -146,9 +142,9 @@ class MainWindow(QWidget):
             self.__connect_status = 'Connected'
             self.LoadKeys()
 
-            # self.__listener_sock, self.__listener_port = self.CreateListener()
-            # self.StartListen(self.__listener_sock)
-            # RegisterListener(self.__ssocket, self.__listener_port)
+            self.__listener_sock, self.__listener_port = self.CreateListener()
+            self.StartListen(self.__listener_sock)
+            RegisterListener(self.__ssocket, self.__listener_port)
         else:
             self.__connect_status = 'Not connected! Address error!'
         self.UpdateLables()
@@ -209,6 +205,8 @@ class MainWindow(QWidget):
         return sock, port
 
     def StartListen(self, sock: socket):
+        #lstnr = threading.Thread(target=ListenProc, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
+        #lstnr.start()
         lstnr = multiprocessing.Process(target=ListenProc, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
         lstnr.start()
 
@@ -219,7 +217,7 @@ def FormatRecievedMessageFtomBytes(params, c_text, private):
     decoded_s = int(s)
     sender = from_name
     msg_text = decrypt(private, decoded_s, T, c_text)
-    return msg_text.decode(encoding='utf-8'), sender
+    return msg_text, sender
 
 
 def ensure_dir(file_path):

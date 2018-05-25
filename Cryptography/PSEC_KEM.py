@@ -21,7 +21,7 @@ def encrypt(public_key: Point, msg, curve: Curve =curve_P256):
     l = 128
     r = int(bin(get_random_k())[2:l+2], 2)
     keylen = 256
-    _t_len = keylen + 128
+    _t_len = keylen + l
     len_ = (keylen + _t_len) / 8
     pre_key = PBKDF2(str(r), 'salt').read(int(len_))
     t_ = int.from_bytes(pre_key, 'big') >> keylen
@@ -34,7 +34,7 @@ def encrypt(public_key: Point, msg, curve: Curve =curve_P256):
     s = r ^ kdf_T_U
     obj = AES.new(str(K)[:32], AES.MODE_CBC, "ABCDEFGHABCDEFGH")
     _n = 16 - msg.__len__() % 16
-    rand_str = ''.join(choice(ascii_letters) for i in range(_n))
+    rand_str = ''.join('#' for i in range(_n))
     c_text = obj.encrypt(msg+rand_str)
     return s, T, c_text
 

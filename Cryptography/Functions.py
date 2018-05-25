@@ -31,6 +31,9 @@ def check_signature(public_key, z, signature, curve: Curve=curve_P256):
 
 
 
+def get_secret(private_key, public_key: Point, curve: Curve=curve_P256):
+    return multiply(public_key, private_key, curve.a)
+
 
 def get_random_k(curve: Curve=curve_P256):
     import random
@@ -39,11 +42,6 @@ def get_random_k(curve: Curve=curve_P256):
 
 def get_public_key(private_key, curve: Curve=curve_P256):
     return multiply(curve.g, private_key, curve.a)
-
-
-def get_secret(private_key, public_key: Point, curve: Curve=curve_P256):
-    return multiply(public_key, private_key, curve.a)
-
 
 
 def generate_keys(curve: Curve=curve_P256):

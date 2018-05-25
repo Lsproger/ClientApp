@@ -122,15 +122,6 @@ class KeySwapWindow(QWidget):
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             print('Yes')
-        # msg = QMessageBox()
-        # msg.setIcon(QMessageBox.Information)
-        #
-        # msg.setText(str(shared_key.x))
-        # msg.setInformativeText(name + ", this is your shared key. Save this info!")
-        # msg.setWindowTitle("Shared key")
-        # msg.setDetailedText("It will disappear if you close!")
-        # msg.setStandardButtons(QMessageBox.Ok)
-        # msg.exec_()
 
     def UpdateLables(self, isConnected):
         if isConnected:
