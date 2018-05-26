@@ -1,6 +1,7 @@
 import multiprocessing
 import socket
 import os
+import threading
 
 from MsgBox import MsgBox, ShowMsg
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
@@ -35,6 +36,7 @@ class MainWindow(QWidget):
     __ssocket = None
     __listener_sock = None
     __listener_port = 0
+    __recieved_message = ''
 
     def __init__(self):
         super().__init__()
@@ -50,6 +52,7 @@ class MainWindow(QWidget):
         private_key_lbl = QLabel('Your private:')
         guide = QLabel('You can use next functions:')
 
+        self.read_message_btn = QPushButton('Read message!', self)
         connect_server_btn = QPushButton('Connect', self)
         gen_keys_btn = QPushButton('Generate keys', self)
         key_swap_btn = QPushButton('Diffie-Hellman', self)
@@ -61,8 +64,11 @@ class MainWindow(QWidget):
         self.public_key = QTextEdit('x: %s <br> y: %s' % (self.__public_key.x, self.__public_key.y))
         self.private_key = QLineEdit(str(self.__private_key))
 
-        self.public_key.setReadOnly(False)
-        self.private_key.setReadOnly(False)
+
+        self.public_key.setReadOnly(True)
+        self.private_key.setReadOnly(True)
+        self.read_message_btn.setVisible(False)
+        self.read_message_btn.setStyleSheet('QPushButton {background-color: #f00; color: #fff}')
 
         self.public_key.setToolTip('Generated public key. If empty - generate keys!')
         self.private_key.setToolTip('Generated private key. If empty - generate keys!')
@@ -72,6 +78,7 @@ class MainWindow(QWidget):
 
         grid.addWidget(username_lbl, 0, 0)
         grid.addWidget(self.username, 0, 1)
+        grid.addWidget(self.read_message_btn, 0, 2)
 
         grid.addWidget(server_ip_lbl, 1, 0)
         grid.addWidget(self.server_ip_edit, 1, 1, 1, 1)
@@ -95,6 +102,7 @@ class MainWindow(QWidget):
 
         self.setLayout(grid)
 
+        self.read_message_btn.clicked.connect(self.ReadMessageBtnClicked)
         connect_server_btn.clicked.connect(self.ConnectServerBtnClicked)
         gen_keys_btn.clicked.connect(self.GenKeysBtnClicked)
         key_swap_btn.clicked.connect(self.KeySwapBtnClicked)
@@ -112,7 +120,6 @@ class MainWindow(QWidget):
         except Exception:
             self.__public_key = Point(0, 0)
             self.__private_key = 0
-        # Implementation of loading keys from server
 
     def LoadPrivateKey(self):
         ensure_dir(self.__filename.format(name=self.__username))
@@ -123,6 +130,10 @@ class MainWindow(QWidget):
     def LoadPublicKey(self):
         x, y = GetPublicKey(self.__username, self.__ssocket)
         self.__public_key = Point(x, y)
+
+    def ReadMessageBtnClicked(self):
+        self.addwin = MsgBox(self.__recieved_message)
+        self.read_message_btn.setVisible(False)
 
     def ConnectServerBtnClicked(self):
         if self.__ssocket is not None:
@@ -205,10 +216,38 @@ class MainWindow(QWidget):
         return sock, port
 
     def StartListen(self, sock: socket):
-        #lstnr = threading.Thread(target=ListenProc, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
-        #lstnr.start()
-        lstnr = multiprocessing.Process(target=ListenProc, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
+        lstnr = threading.Thread(target=self.ListenThread, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
+        lstnr.setDaemon(True)
         lstnr.start()
+
+    def ListenThread(self, sock: socket, private, myusername, ssocket):
+        while 1:
+            conn, addr = sock.accept()
+            service = conn.recv(1024)
+            if service == b'SWAP':
+                conn.send(b'SWAP')
+                client_name = conn.recv(1024).decode(encoding='utf-8')
+                partner_public_mas = GetPublicKey(client_name, ssocket)
+                partner_public = Point(partner_public_mas[0], partner_public_mas[1])
+                secret = get_secret(int(private), partner_public)
+                msgtext = myusername + ', your shared key with %s is:\n' % client_name + str(secret.x)
+                self.ShowDialog(msgtext)
+                conn.close()
+
+            elif service == b'MSG':
+                conn.send(b'MSG')
+                params = conn.recv(4096)
+                conn.send(b'Ok')
+                c_text = conn.recv(1024)
+                msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(private))
+                text_to_show = myusername + ', you have recieved message from %s:\n %s' % (sender, msg)
+                self.ShowDialog(text_to_show)
+            conn.close()
+            print('Procedure ends')
+
+    def ShowDialog(self, msg):
+        self.__recieved_message = msg
+        self.read_message_btn.setVisible(True)
 
 
 def FormatRecievedMessageFtomBytes(params, c_text, private):
@@ -225,26 +264,3 @@ def ensure_dir(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def ListenProc(sock: socket, private, myusername, ssocket):
-    while 1:
-        conn, addr = sock.accept()
-        service = conn.recv(1024)
-        if service == b'SWAP':
-            conn.send(b'SWAP')
-            client_name = conn.recv(1024).decode(encoding='utf-8')
-            partner_public_mas = GetPublicKey(client_name, ssocket)
-            partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-            secret = get_secret(int(private), partner_public)
-            msgtext = myusername + ', your shared key with %s is:\n' % client_name + str(secret.x)
-            ShowMsg(msgtext)
-            conn.close()
-
-        elif service == b'MSG':
-            conn.send(b'MSG')
-            params = conn.recv(4096)
-            conn.send(b'Ok')
-            c_text = conn.recv(1024)
-            msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(private))
-            text_to_show = myusername + ', you have recieved message from %s:\n %s' % (sender, msg)
-            ShowMsg(text_to_show)
-        conn.close()

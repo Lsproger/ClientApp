@@ -64,7 +64,6 @@ class SendMessageWindow(QWidget):
         self.setWindowTitle('Send message')
         self.show()
 
-
     def SendMsgBtnClicked(self):
         if self.ConnectPartner() == 0:
             return 0
