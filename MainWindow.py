@@ -1,18 +1,16 @@
-import multiprocessing
 import socket
 import os
 import threading
 
-from MsgBox import MsgBox, ShowMsg
+from MsgBox import MsgBox
 from Requests import (ConnectToServer, SavePublicKey, GetPublicKey, Disconnect, RegisterListener)
-from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
-                             QTextEdit, QGridLayout, QPushButton, QMessageBox)
+from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QTextEdit, QGridLayout, QPushButton)
 from Cryptography.Functions import generate_keys, get_secret
 from KeySwapWindow import KeySwapWindow
 from SendMessageWindow import SendMessageWindow
 from Cryptography.Point import Point
 from Cryptography.PSEC_KEM import decrypt
-
+from Crypto.Cipher import DES
 
 class MainWindow(QWidget):
 
@@ -124,7 +122,10 @@ class MainWindow(QWidget):
     def LoadPrivateKey(self):
         ensure_dir(self.__filename.format(name=self.__username))
         f = open(self.__filename.format(name=self.__username), 'r')
-        self.__private_key = f.read()
+        crypted_key = f.read()
+        des = get_des(self.__username)
+        self.__private_key = des.decrypt(crypted_key).decode(encoding='utf-8')
+        #self.__private_key = f.read()
         f.close()
 
     def LoadPublicKey(self):
@@ -163,11 +164,19 @@ class MainWindow(QWidget):
     def SavePrivateKey(self, key):
         try:
             f = open(self.__filename.format(name=self.__username), 'w')
-            f.write(str(key))
+            des = get_des(self.__username)
+            for i in range(0, 8 - key.__len__() % 8):
+                key = key + ' '
+            crypted_key = des.encrypt(bytes(key, encoding='utf-8'))
+            #key_to_write = crypted_key.decode(encoding='utf-8')
+            f.write(str(crypted_key))
+            #f.write(str(key))
             f.close()
-        except Exception:
+        except OSError:
             print('file not opened on way ' + self.__filename.format(name=self.__username))
             f.close()
+        except Exception as e:
+            print(e.__repr__())
 
     def SaveKeys(self, private_key, public_key, csocket: socket):
         SavePublicKey(public_key, csocket)
@@ -263,4 +272,11 @@ def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+
+def get_des(username):
+    tmp = (int(8 / username.__len__()) + 1) * username
+    iv = tmp[:8]
+    des = DES.new(iv, DES.MODE_ECB)
+    return des
 

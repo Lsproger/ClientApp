@@ -1,7 +1,4 @@
-import sys
-
-from PyQt5.QtWidgets import (QWidget, QLabel,
-                             QGridLayout, QApplication, QMessageBox)
+from PyQt5.QtWidgets import (QWidget, QLabel, QGridLayout)
 
 
 class MsgBox(QWidget):

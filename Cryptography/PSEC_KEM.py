@@ -5,8 +5,6 @@ from Cryptography.Operations import multiply
 from Cryptography.Point import Point
 from pbkdf2 import PBKDF2
 from Crypto.Cipher import AES
-from random import choice
-from string import ascii_letters
 
 
 # Key generation
