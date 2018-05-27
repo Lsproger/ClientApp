@@ -32,7 +32,7 @@ def encrypt(public_key: Point, msg, curve: Curve =curve_P256):
     s = r ^ kdf_T_U
     obj = AES.new(str(K)[:32], AES.MODE_CBC, "ABCDEFGHABCDEFGH")
     _n = 16 - msg.__len__() % 16
-    rand_str = ''.join('#' for i in range(_n))
+    rand_str = ''.join(' ' for i in range(_n))
     c_text = obj.encrypt(msg+rand_str)
     return s, T, c_text
 

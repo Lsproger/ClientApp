@@ -125,7 +125,6 @@ class MainWindow(QWidget):
         crypted_key = f.read()
         des = get_des(self.__username)
         self.__private_key = des.decrypt(crypted_key).decode(encoding='utf-8')
-        #self.__private_key = f.read()
         f.close()
 
     def LoadPublicKey(self):
@@ -168,9 +167,7 @@ class MainWindow(QWidget):
             for i in range(0, 8 - key.__len__() % 8):
                 key = key + ' '
             crypted_key = des.encrypt(bytes(key, encoding='utf-8'))
-            #key_to_write = crypted_key.decode(encoding='utf-8')
             f.write(str(crypted_key))
-            #f.write(str(key))
             f.close()
         except OSError:
             print('file not opened on way ' + self.__filename.format(name=self.__username))
@@ -225,11 +222,11 @@ class MainWindow(QWidget):
         return sock, port
 
     def StartListen(self, sock: socket):
-        lstnr = threading.Thread(target=self.ListenThread, args=(self.__listener_sock, self.__private_key, self.__username, self.__ssocket))
+        lstnr = threading.Thread(target=self.ListenThread, args=(self.__listener_sock, self.__username, self.__ssocket))
         lstnr.setDaemon(True)
         lstnr.start()
 
-    def ListenThread(self, sock: socket, private, myusername, ssocket):
+    def ListenThread(self, sock: socket, myusername, ssocket):
         while 1:
             conn, addr = sock.accept()
             service = conn.recv(1024)
@@ -238,7 +235,7 @@ class MainWindow(QWidget):
                 client_name = conn.recv(1024).decode(encoding='utf-8')
                 partner_public_mas = GetPublicKey(client_name, ssocket)
                 partner_public = Point(partner_public_mas[0], partner_public_mas[1])
-                secret = get_secret(int(private), partner_public)
+                secret = get_secret(int(self.__private_key), partner_public)
                 msgtext = myusername + ', your shared key with %s is:\n' % client_name + str(secret.x)
                 self.ShowDialog(msgtext)
                 conn.close()
@@ -248,7 +245,7 @@ class MainWindow(QWidget):
                 params = conn.recv(4096)
                 conn.send(b'Ok')
                 c_text = conn.recv(1024)
-                msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(private))
+                msg, sender = FormatRecievedMessageFtomBytes(params, c_text, int(self.__private_key))
                 text_to_show = myusername + ', you have recieved message from %s:\n %s' % (sender, msg)
                 self.ShowDialog(text_to_show)
             conn.close()

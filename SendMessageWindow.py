@@ -67,6 +67,7 @@ class SendMessageWindow(QWidget):
     def SendMsgBtnClicked(self):
         if self.ConnectPartner() == 0:
             return 0
+
         sock = socket.socket()
         sock.connect((str(self.__partner_addr), int(self.__partner_port)))
         print('connected to partner', sock)
@@ -77,6 +78,9 @@ class SendMessageWindow(QWidget):
             # sock.send(bytes(self.__username, 'utf-8'))
             partner_public = GetPublicKey(self.__partner_name, self.__sock)
             self.__partner_public = Point(partner_public[0], partner_public[1])
+            if self.__partner_public.x == 0 or self.__partner_public.y == 0:
+                self.ShowDialog('Your partner public key is 0')
+                return 0
             s, T, c_text = encrypt(self.__partner_public, self.msg_edit.toPlainText())
             Tsrt = str(T.x) + ';' + str(T.y)
             str_params = str(s) + ';' + Tsrt
@@ -84,7 +88,7 @@ class SendMessageWindow(QWidget):
             sock.send(bytes(text_to_send, encoding='utf-8'))
             if sock.recv(1024) == b'Ok':
                 sock.send(c_text)
-            self.ShowDialog()
+            self.ShowDialog('Sended!')
 
     def ConnectPartner(self):
         if self.partner_name_edit.text() == self.__username:
@@ -102,8 +106,8 @@ class SendMessageWindow(QWidget):
             resp = resp.decode(encoding='utf-8').split(';')
             self.__partner_addr, self.__partner_port = resp[0], resp[1]
 
-    def ShowDialog(self):
-        reply = QMessageBox.question(self, 'Message', 'Sended!', QMessageBox.Yes,
+    def ShowDialog(self, text):
+        reply = QMessageBox.question(self, 'Message', text, QMessageBox.Yes,
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             print('Yes')

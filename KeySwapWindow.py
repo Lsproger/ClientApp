@@ -99,6 +99,8 @@ class KeySwapWindow(QWidget):
 
     def StartSwapBtnClicked(self):
         try:
+            if int(self.__private) == 0:
+                return
             sock = socket.socket()
             sock.connect((str(self.__partner_addr), int(self.__partner_port)))
             print('connected to partner', sock)
